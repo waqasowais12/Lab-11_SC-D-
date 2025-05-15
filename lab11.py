@@ -1,55 +1,74 @@
 import datetime
 
+class Expense:
+    def __init__(self, date, category, amount, description):
+        self.date = date
+        self.category = category
+        self.amount = amount
+        self.description = description
+
+    def __str__(self):
+        return (f"Date       : {self.date}\n"
+                f"Category   : {self.category}\n"
+                f"Amount     : ${self.amount:.2f}\n"
+                f"Description: {self.description}")
+
 expenses = []
 
-def add_expense():
-    print("\n---- Add New Expense ----")
-    date_str = input("Enter date (YYYY-MM-DD): ")
-    try:
-        date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
-    except ValueError:
-        print("Invalid date format. Please use YYYY-MM-DD.")
-        return
+def get_valid_date(prompt="Enter date (YYYY-MM-DD): "):
+    while True:
+        date_str = input(prompt)
+        try:
+            return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            print("✗ Invalid date format. Please use YYYY-MM-DD.")
 
-    category = input("Enter category: ")
+def get_valid_amount():
     while True:
         try:
             amount = float(input("Enter amount: "))
-            if amount <= 0:
-                print("Amount must be positive.")
+            if amount > 0:
+                return amount
             else:
-                break
+                print("✗ Amount must be positive.")
         except ValueError:
-            print("Invalid amount. Please enter a number.")
+            print("✗ Invalid amount. Please enter a number.")
 
+def add_expense():
+    print("\n---- Add New Expense ----")
+    date = get_valid_date()
+
+    if expenses:
+        existing_categories = list({e.category for e in expenses})
+        print(f"Existing categories: {', '.join(existing_categories)}")
+    category = input("Enter category: ")
+
+    amount = get_valid_amount()
     description = input("Enter description: ")
-    expenses.append({"date": date, "category": category, "amount": amount, "description": description})
-    print("Expense added successfully!\n")
+
+    expenses.append(Expense(date, category, amount, description))
+    print("✓ Expense added successfully!\n")
 
 def view_expenses():
     if not expenses:
         print("No expenses recorded yet.\n")
         return
+
     print("\n---- All Expenses ----")
-    for i, expense in enumerate(expenses):
-        print(f"Entry {i+1}:")
-        for key, value in expense.items():
-            print(f"{key.capitalize()}: {value}")
-        print("----------------------")
+    for i, expense in enumerate(expenses, 1):
+        print(f"Entry {i}:")
+        print(expense)
+        print("-" * 30)
     print()
 
 def total_category_expenses():
     category_to_find = input("Enter category to see total expenses: ")
-    total = 0
-    found = False
-    for expense in expenses:
-        if expense["category"].lower() == category_to_find.lower():
-            total += expense["amount"]
-            found = True
-    if found:
-        print(f"Total expenses for '{category_to_find}': ${total:.2f}\n")
+    total = sum(e.amount for e in expenses if e.category.lower() == category_to_find.lower())
+
+    if total > 0:
+        print(f"✓ Total expenses for '{category_to_find}': ${total:.2f}\n")
     else:
-        print(f"No expenses found for the category '{category_to_find}'.\n")
+        print(f"✗ No expenses found for the category '{category_to_find}'.\n")
 
 def delete_expense():
     view_expenses()
@@ -57,16 +76,15 @@ def delete_expense():
         return
     while True:
         try:
-            entry_num_str = input("Enter the entry number to delete: ")
-            entry_num = int(entry_num_str)
+            entry_num = int(input("Enter the entry number to delete: "))
             if 1 <= entry_num <= len(expenses):
                 deleted_expense = expenses.pop(entry_num - 1)
-                print(f"Expense '{deleted_expense['description']}' deleted successfully!\n")
+                print(f"✓ Expense '{deleted_expense.description}' deleted successfully!\n")
                 break
             else:
-                print("Invalid entry number. Please enter a number from the list.")
+                print("✗ Invalid entry number. Please try again.")
         except ValueError:
-            print("Invalid input. Please enter a number.")
+            print("✗ Invalid input. Please enter a number.")
 
 def main_menu():
     while True:
@@ -87,10 +105,10 @@ def main_menu():
         elif choice == '4':
             delete_expense()
         elif choice == '5':
-            print("Thank you for using the Expense Tracker!")
+            print("✓ Thank you for using the Expense Tracker!")
             break
         else:
-            print("Invalid choice. Please try again.\n")
+            print("✗ Invalid choice. Please try again.\n")
 
 if __name__ == "__main__":
     main_menu()
